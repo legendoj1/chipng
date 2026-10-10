@@ -1,70 +1,59 @@
-# Getting Started with Create React App
+# Chipng
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A native macOS app that does what [Pixelfix](https://devforum.roblox.com/t/pixelfix-remove-the-black-edges-on-scaled-images/201802) does on Windows: it alpha-bleeds PNGs so they don't get dark outlines when Roblox scales them. It then compresses them with Google's [Squoosh](https://github.com/GoogleChromeLabs/squoosh) codecs, so you don't need TinyPNG afterwards.
 
-## Available Scripts
+## Build & install
 
-In the project directory, you can run:
+```bash
+./build-app.sh --install
+```
 
-### `npm start`
+This compiles the app and installs it to `/Applications`. Leave off `--install` to build a test copy at `build/Chipng.app` instead. It needs Xcode or the Command Line Tools (macOS 14+).
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+To work on the code, open `Package.swift` in Xcode and press ⌘R.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Using it
 
-### `npm test`
+1. Drop PNGs or folders onto the window or the Dock icon, or press ⌘O. They're processed right away.
+2. Then pick one:
+   - **Replace Originals** (⇧⌘R) overwrites the files you added. By default, a copy of each original goes to the Trash first.
+   - **Export** (⇧⌘E) saves every image as a separate file in a folder you choose.
+   - **Export ▾ → Export as ZIP…** (⌥⌘E) saves them all in one archive.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Right-click rows to act on just those images. The inspector previews the selected image. **Show Hidden Colors** reveals the colours alpha bleeding put behind transparent pixels.
 
-### `npm run build`
+There are two settings, both on by default:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Compress with Squoosh** shrinks images after bleeding them.
+- **Keep originals in Trash** makes Replace Originals put a copy of each original in the Trash. Turn it off to overwrite files without a backup.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## What happens to each image
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. **Alpha bleed.** This is the original chipng / [urraka](https://github.com/urraka/alpha-bleeding) algorithm, ported to Swift (`AlphaBleed.swift`). PNGs are decoded with a custom decoder (`PNGCodec.swift`), because macOS's image APIs premultiply alpha and would erase the hidden colours.
+2. **Squoosh compression.** This uses Squoosh's own default settings. Its WebAssembly codecs run in a hidden WebKit view with a pool of workers (`Resources/Squoosh`).
+   - **Reduce Palette** uses libimagequant at 256 colours with full dithering, like TinyPNG.
+   - **OxiPNG** runs at level 2.
+3. **Bleed protection.** Stock Squoosh and TinyPNG both turn every invisible pixel black, which brings the dark edges back. Chipng prevents this in two ways:
+   - OxiPNG always runs with alpha optimisation off. It uses [jSquash](https://github.com/jamsinclair/jSquash)'s build of Squoosh's OxiPNG codec, which exposes that switch.
+   - After palette reduction, the image is bled again. Invisible pixels are snapped to "twins" of the visible palette colours, so the result is still a small 8-bit PNG (`PaletteBleed` in `AlphaBleed.swift`).
+4. **Quality guard.** If palette reduction would visibly change an image (below 32 dB PSNR, e.g. photos or noisy gradients), that image is compressed losslessly with OxiPNG instead.
 
-### `npm run eject`
+## Command line
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+build/Chipng.app/Contents/MacOS/Chipng --cli in.png out.png [--no-compress]
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## History
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+This started as a fork of [chipng](https://github.com/rbxxaxa/chipng), a web app for alpha-bleeding images. The alpha-bleed algorithm is ported from it. The website has been removed from this repository; it's still in the git history.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Licences
 
-## Learn More
+| Component | Licence |
+|---|---|
+| Squoosh | Apache-2.0 |
+| OxiPNG | MIT |
+| libimagequant | GPL-3.0 |
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Each codec's licence file is in `Resources/Squoosh/codecs/`.
