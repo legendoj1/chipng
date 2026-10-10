@@ -1,0 +1,78 @@
+<ui:FluentWindow
+    x:Class="Chipng.QuickFixWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="Chipng"
+    Width="440"
+    SizeToContent="Height"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterScreen"
+    ExtendsContentIntoTitleBar="True"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round">
+
+    <StackPanel>
+        <ui:TitleBar Title="Chipng" ShowMaximize="False" ShowMinimize="False">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/Assets/Chipng-64.png" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <Grid Margin="24,8,24,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Width="40" Height="40" Margin="0,2,16,0" VerticalAlignment="Top">
+                <ui:ProgressRing x:Name="Spinner" Width="36" Height="36" IsIndeterminate="True" />
+                <ui:SymbolIcon
+                    x:Name="DoneIcon"
+                    FontSize="36"
+                    Symbol="CheckmarkCircle24"
+                    Filled="True"
+                    Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                    Visibility="Collapsed" />
+                <ui:SymbolIcon
+                    x:Name="FailedIcon"
+                    FontSize="36"
+                    Symbol="ErrorCircle24"
+                    Filled="True"
+                    Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                    Visibility="Collapsed" />
+            </Grid>
+
+            <StackPanel Grid.Column="1">
+                <ui:TextBlock x:Name="Heading" FontTypography="Subtitle" Text="Fixing images…" TextWrapping="Wrap" />
+                <TextBlock
+                    x:Name="Detail"
+                    Margin="0,4,0,0"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    TextTrimming="CharacterEllipsis"
+                    Text="Starting…" />
+                <ProgressBar
+                    x:Name="Progress"
+                    Height="4"
+                    Margin="0,14,0,0"
+                    Minimum="0"
+                    Maximum="1" />
+                <TextBlock
+                    x:Name="Failures"
+                    Margin="0,12,0,0"
+                    TextWrapping="Wrap"
+                    Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                    Visibility="Collapsed" />
+                <StackPanel
+                    x:Name="Buttons"
+                    Margin="0,18,0,0"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Visibility="Collapsed">
+                    <ui:Button Content="Open Chipng" Click="OnOpenChipng" />
+                    <ui:Button Margin="8,0,0,0" Content="Close" Appearance="Primary" Click="OnClose" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</ui:FluentWindow>

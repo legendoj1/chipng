@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Lets the Windows app build on macOS/Linux too. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Chipng</AssemblyName>
+    <RootNamespace>Chipng</RootNamespace>
+    <ApplicationIcon>Assets\Chipng.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Product>Chipng</Product>
+    <Description>Alpha-bleeds PNGs for Roblox and compresses them with Squoosh.</Description>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" Version="4.2.1" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chipng.Core\Chipng.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Squoosh engine shared with the Mac app, extracted to %LOCALAPPDATA% at runtime. -->
+    <EmbeddedResource Include="..\..\Resources\Squoosh\**\*" LogicalName="Squoosh/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Resource Include="Assets\Chipng-64.png" />
+  </ItemGroup>
+
+</Project>

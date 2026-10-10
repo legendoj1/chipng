@@ -1,0 +1,422 @@
+<ui:FluentWindow
+    x:Class="Chipng.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:local="clr-namespace:Chipng"
+    Title="Chipng"
+    Width="1120"
+    Height="680"
+    MinWidth="760"
+    MinHeight="460"
+    WindowStartupLocation="CenterScreen"
+    ExtendsContentIntoTitleBar="True"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round"
+    AllowDrop="True"
+    DragEnter="OnDragEnter"
+    DragOver="OnDragOver"
+    DragLeave="OnDragLeave"
+    Drop="OnDrop"
+    PreviewKeyDown="OnPreviewKeyDown">
+
+    <ui:FluentWindow.Resources>
+        <local:BoolToVisibilityConverter x:Key="Visible" />
+        <local:BoolToVisibilityConverter x:Key="Collapsed" Invert="True" />
+
+        <DrawingBrush x:Key="Checkerboard" TileMode="Tile" Viewport="0,0,16,16" ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#FFF4F4F4">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,16,16" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#FFD9D9D9">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="0,0,8,8" />
+                                <RectangleGeometry Rect="8,8,8,8" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <Style x:Key="SecondaryText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="Chipng">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/Assets/Chipng-64.png" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <!-- Command bar -->
+        <Grid Grid.Row="1" Margin="16,4,16,12">
+            <StackPanel Orientation="Horizontal">
+                <ui:Button
+                    Content="Add images"
+                    Icon="{ui:SymbolIcon ImageAdd24}"
+                    ToolTip="Add PNG images (Ctrl+O). You can also drag files or folders into the window."
+                    Click="OnAddImages" />
+                <ui:Button
+                    Margin="8,0,0,0"
+                    Content="Add folder"
+                    Icon="{ui:SymbolIcon FolderAdd24}"
+                    ToolTip="Add every PNG in a folder and its subfolders"
+                    Click="OnAddFolder" />
+            </StackPanel>
+
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <ui:Button
+                    Content="Clear all"
+                    Icon="{ui:SymbolIcon Delete24}"
+                    Appearance="Transparent"
+                    IsEnabled="{Binding HasItems}"
+                    ToolTip="Remove all images from the list"
+                    Click="OnClearAll" />
+                <ui:DropDownButton
+                    Margin="8,0,0,0"
+                    Content="Export"
+                    Icon="{ui:SymbolIcon ArrowExportUp24}"
+                    IsEnabled="{Binding CanExport}"
+                    ToolTip="Save the processed images somewhere else">
+                    <ui:DropDownButton.Flyout>
+                        <ContextMenu>
+                            <MenuItem Header="Each image to a folder…" InputGestureText="Ctrl+Shift+E" Click="OnExportToFolder">
+                                <MenuItem.Icon>
+                                    <ui:SymbolIcon Symbol="Folder24" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="All images as a ZIP file…" InputGestureText="Ctrl+Alt+E" Click="OnExportZip">
+                                <MenuItem.Icon>
+                                    <ui:SymbolIcon Symbol="FolderZip24" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </ui:DropDownButton.Flyout>
+                </ui:DropDownButton>
+                <ui:Button
+                    Margin="8,0,0,0"
+                    Content="Replace originals"
+                    Icon="{ui:SymbolIcon ArrowSync24}"
+                    Appearance="Primary"
+                    IsEnabled="{Binding CanExport}"
+                    ToolTip="Overwrite the original files with the processed images (Ctrl+Shift+R)"
+                    Click="OnReplaceOriginals" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Content -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="340" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.Column="0"
+                Margin="16,0,8,0"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid>
+                    <ui:DataGrid
+                        x:Name="ImageGrid"
+                        Visibility="{Binding HasItems, Converter={StaticResource Visible}}"
+                        ItemsSource="{Binding Items}"
+                        AutoGenerateColumns="False"
+                        IsReadOnly="True"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        HeadersVisibility="Column"
+                        GridLinesVisibility="None"
+                        SelectionMode="Extended"
+                        SelectionUnit="FullRow"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        RowHeight="44"
+                        SelectionChanged="OnSelectionChanged"
+                        MouseDoubleClick="OnRowDoubleClick">
+                        <ui:DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Replace original" Click="OnReplaceOriginals" />
+                                <MenuItem Header="Export to a folder…" Click="OnExportToFolder" />
+                                <MenuItem Header="Export as a ZIP file…" Click="OnExportZip" />
+                                <Separator />
+                                <MenuItem Header="Show in File Explorer" Click="OnShowInExplorer" />
+                                <Separator />
+                                <MenuItem Header="Remove from list" InputGestureText="Delete" Click="OnRemoveSelected" />
+                            </ContextMenu>
+                        </ui:DataGrid.ContextMenu>
+                        <ui:DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Name" Width="2*" MinWidth="200" SortMemberPath="Name">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ToolTip="{Binding Path}">
+                                            <Border
+                                                Width="28"
+                                                Height="28"
+                                                Margin="0,0,10,0"
+                                                Background="{StaticResource Checkerboard}"
+                                                CornerRadius="4"
+                                                ClipToBounds="True">
+                                                <Image Source="{Binding Thumbnail}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                                            </Border>
+                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                                                <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Dimensions" Width="100" SortMemberPath="Dimensions">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Dimensions}" Style="{StaticResource SecondaryText}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Original" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding OriginalSizeText}" Style="{StaticResource SecondaryText}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Result" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ResultSizeText}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Change" Width="72">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ChangeText}" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSmaller}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Status" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ToolTip="{Binding Error}">
+                                            <ui:ProgressRing
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,8,0"
+                                                IsIndeterminate="True"
+                                                Visibility="{Binding IsProcessing, Converter={StaticResource Visible}}" />
+                                            <ui:SymbolIcon
+                                                Margin="0,0,8,0"
+                                                FontSize="16"
+                                                Symbol="Clock24"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Visibility="{Binding IsWaiting, Converter={StaticResource Visible}}" />
+                                            <ui:SymbolIcon
+                                                Margin="0,0,8,0"
+                                                FontSize="16"
+                                                Symbol="CheckmarkCircle24"
+                                                Filled="True"
+                                                Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                                Visibility="{Binding IsDone, Converter={StaticResource Visible}}" />
+                                            <ui:SymbolIcon
+                                                Margin="0,0,8,0"
+                                                FontSize="16"
+                                                Symbol="ErrorCircle24"
+                                                Filled="True"
+                                                Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                                Visibility="{Binding IsFailed, Converter={StaticResource Visible}}" />
+                                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource SecondaryText}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </ui:DataGrid.Columns>
+                    </ui:DataGrid>
+
+                    <!-- Empty state -->
+                    <StackPanel
+                        MaxWidth="440"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding IsEmpty, Converter={StaticResource Visible}}">
+                        <ui:SymbolIcon
+                            HorizontalAlignment="Center"
+                            FontSize="56"
+                            Symbol="ImageMultiple24"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                        <ui:TextBlock
+                            Margin="0,16,0,0"
+                            HorizontalAlignment="Center"
+                            FontTypography="Subtitle"
+                            Text="Drop PNG images here" />
+                        <ui:TextBlock
+                            Margin="0,8,0,0"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="Chipng alpha-bleeds transparent edges so images don’t get dark outlines when Roblox scales them, then shrinks them with Squoosh." />
+                        <StackPanel Margin="0,20,0,0" HorizontalAlignment="Center" Orientation="Horizontal">
+                            <ui:Button Content="Choose images" Appearance="Primary" Click="OnAddImages" />
+                            <ui:Button Margin="8,0,0,0" Content="Choose folder" Click="OnAddFolder" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Side pane -->
+            <ScrollViewer Grid.Column="1" Margin="8,0,16,0" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <StackPanel x:Name="PreviewPanel" Margin="0,0,0,20" Visibility="Collapsed">
+                        <ui:TextBlock FontTypography="BodyStrong" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <Border
+                            Height="220"
+                            Margin="0,8,0,8"
+                            Background="{StaticResource Checkerboard}"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <Grid>
+                                <Image x:Name="PreviewImage" Margin="10" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                                <ui:ProgressRing
+                                    Width="28"
+                                    Height="28"
+                                    IsIndeterminate="True"
+                                    Visibility="{Binding IsProcessing, Converter={StaticResource Visible}}" />
+                            </Grid>
+                        </Border>
+                        <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Eye24}">
+                            <ui:CardControl.Header>
+                                <StackPanel>
+                                    <ui:TextBlock Text="Show hidden colors" />
+                                    <ui:TextBlock
+                                        FontTypography="Caption"
+                                        TextWrapping="Wrap"
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                        Text="Ignore transparency to see what alpha bleeding filled in." />
+                                </StackPanel>
+                            </ui:CardControl.Header>
+                            <ui:ToggleSwitch x:Name="HiddenColorsToggle" Checked="OnHiddenColorsToggled" Unchecked="OnHiddenColorsToggled" />
+                        </ui:CardControl>
+                        <Grid Margin="4,8,4,0" Visibility="{Binding IsDone, Converter={StaticResource Visible}}">
+                            <TextBlock Text="Compression" Style="{StaticResource SecondaryText}" />
+                            <TextBlock HorizontalAlignment="Right" Text="{Binding Method}" />
+                        </Grid>
+                        <TextBlock
+                            Margin="4,8,4,0"
+                            TextWrapping="Wrap"
+                            Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                            Text="{Binding Error}"
+                            Visibility="{Binding IsFailed, Converter={StaticResource Visible}}" />
+                    </StackPanel>
+
+                    <ui:TextBlock Margin="0,0,0,8" FontTypography="BodyStrong" Text="Settings" />
+
+                    <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon ArrowMinimize24}">
+                        <ui:CardControl.Header>
+                            <StackPanel>
+                                <ui:TextBlock Text="Compress with Squoosh" />
+                                <ui:TextBlock
+                                    FontTypography="Caption"
+                                    TextWrapping="Wrap"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Text="Shrinks images like TinyPNG after bleeding them. Images that would lose quality are compressed losslessly instead." />
+                            </StackPanel>
+                        </ui:CardControl.Header>
+                        <ui:ToggleSwitch IsChecked="{Binding Settings.Compress}" />
+                    </ui:CardControl>
+
+                    <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon BinRecycle24}">
+                        <ui:CardControl.Header>
+                            <StackPanel>
+                                <ui:TextBlock Text="Keep originals in Recycle Bin" />
+                                <ui:TextBlock
+                                    FontTypography="Caption"
+                                    TextWrapping="Wrap"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Text="Replace originals puts a copy of each original file in the Recycle Bin first." />
+                            </StackPanel>
+                        </ui:CardControl.Header>
+                        <ui:ToggleSwitch IsChecked="{Binding Settings.KeepOriginalsInRecycleBin}" />
+                    </ui:CardControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Status bar -->
+        <Grid Grid.Row="3" Margin="16,10,16,12">
+            <StackPanel Orientation="Horizontal">
+                <ProgressBar
+                    Width="140"
+                    Height="4"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    Minimum="0"
+                    Maximum="1"
+                    Value="{Binding Progress, Mode=OneWay}"
+                    Visibility="{Binding IsProcessing, Converter={StaticResource Visible}}" />
+                <TextBlock Text="{Binding StatusText}" Style="{StaticResource SecondaryText}" />
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <ui:SymbolIcon Margin="0,0,6,0" FontSize="14" Symbol="Sparkle24" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <TextBlock Text="{Binding ModeText}" Style="{StaticResource SecondaryText}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Drop highlight -->
+        <Border
+            x:Name="DropHighlight"
+            Grid.Row="1"
+            Grid.RowSpan="3"
+            Margin="8"
+            BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+            BorderThickness="2"
+            CornerRadius="10"
+            IsHitTestVisible="False"
+            Visibility="Collapsed">
+            <Rectangle Fill="{DynamicResource AccentFillColorDefaultBrush}" Opacity="0.08" RadiusX="8" RadiusY="8" />
+        </Border>
+    </Grid>
+</ui:FluentWindow>

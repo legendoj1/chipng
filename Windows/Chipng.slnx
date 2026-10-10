@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Chipng.Core/Chipng.Core.csproj" />
+  <Project Path="Chipng.CoreCheck/Chipng.CoreCheck.csproj" />
+  <Project Path="Chipng/Chipng.csproj" />
+</Solution>

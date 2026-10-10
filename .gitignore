@@ -1,4 +1,8 @@
 build/
 .build/
 .swiftpm/
+dist/
+Windows/Chipng.exe
+bin/
+obj/
 .DS_Store
