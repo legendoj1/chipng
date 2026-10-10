@@ -5,12 +5,12 @@ A Mac and Windows app that alpha-bleeds PNGs, like [Pixelfix](https://devforum.r
 ## Build & install (Mac)
 
 ```bash
-./build-app.sh --install
+./Mac/build-app.sh --install
 ```
 
-This compiles the app and installs it to `/Applications`. Leave off `--install` to build a test copy at `build/Chipng.app` instead. It needs Xcode or the Command Line Tools (macOS 14+).
+This compiles the app and installs it to `/Applications`. Leave off `--install` to build a test copy at `Mac/build/Chipng.app` instead. It needs Xcode or the Command Line Tools (macOS 14+).
 
-To work on the code, open `Package.swift` in Xcode and press ⌘R.
+To work on the code, open `Mac/Package.swift` in Xcode and press ⌘R.
 
 ## Build (Windows)
 
@@ -46,7 +46,7 @@ There are two settings, both on by default:
 ## What happens to each image
 
 1. **Alpha bleed.** This is the original chipng / [urraka](https://github.com/urraka/alpha-bleeding) algorithm, ported to Swift (`AlphaBleed.swift`). PNGs are decoded with a custom decoder (`PNGCodec.swift`), because macOS's image APIs premultiply alpha and would erase the hidden colours.
-2. **Squoosh compression.** This uses Squoosh's own default settings. Its WebAssembly codecs run in a hidden WebKit view with a pool of workers (`Resources/Squoosh`).
+2. **Squoosh compression.** This uses Squoosh's own default settings. Its WebAssembly codecs run in a hidden WebKit view with a pool of workers (`Shared/Squoosh`).
    - **Reduce Palette** uses libimagequant at 256 colours with full dithering, like TinyPNG.
    - **OxiPNG** runs at level 2.
 3. **Bleed protection.** Stock Squoosh and TinyPNG both turn every invisible pixel black, which brings the dark edges back. Chipng prevents this in two ways:
@@ -58,16 +58,17 @@ There are two settings, both on by default:
 
 | Path | What's there |
 |---|---|
-| `Sources/Chipng`, `Package.swift` | Mac app (SwiftUI) |
+| `Mac` | Mac app (SwiftUI) |
 | `Windows/Chipng` | Windows app (WPF with [WPF-UI](https://github.com/lepoco/wpfui) for the Windows 11 look) |
 | `Windows/Chipng.Core` | Windows image pipeline: a C# port of the Swift PNG codec, alpha bleed and palette bleed |
 | `Windows/Chipng.CoreCheck` | Cross-platform checks that the C# pipeline matches the Mac app pixel for pixel |
-| `Resources/Squoosh` | Squoosh engine shared by both apps (WKWebView on Mac, WebView2 on Windows) |
+| `Shared/Squoosh` | Squoosh engine shared by both apps (WKWebView on Mac, WebView2 on Windows) |
+| `Scripts` | Icon generators for both apps |
 
 ## Command line
 
 ```bash
-build/Chipng.app/Contents/MacOS/Chipng --cli in.png out.png [--no-compress]
+/Applications/Chipng.app/Contents/MacOS/Chipng --cli in.png out.png [--no-compress]
 ```
 
 ## History
@@ -83,4 +84,4 @@ This started as a fork of [chipng](https://github.com/rbxxaxa/chipng), a web app
 | OxiPNG | MIT |
 | libimagequant | GPL-3.0 |
 
-Each codec's licence file is in `Resources/Squoosh/codecs/`.
+Each codec's licence file is in `Shared/Squoosh/codecs/`.

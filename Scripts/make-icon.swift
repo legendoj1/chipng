@@ -1,5 +1,5 @@
-// Renders Resources/AppIcon.icns: the chipng 血 mark on a red squircle.
-// Usage: swift Scripts/make-icon.swift <output-dir>
+// Renders AppIcon.icns: the chipng 血 mark on a red squircle.
+// Usage: swift Scripts/make-icon.swift Mac/Resources
 import AppKit
 
 let output = URL(fileURLWithPath: CommandLine.arguments[1])

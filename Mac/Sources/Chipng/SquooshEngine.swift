@@ -2,7 +2,7 @@ import Foundation
 import WebKit
 
 /// Runs Google's Squoosh codecs (OxiPNG + libimagequant, compiled to WebAssembly)
-/// inside a hidden WebKit view. The page in `Resources/Squoosh` keeps a pool of
+/// inside a hidden WebKit view. The page in `Shared/Squoosh` keeps a pool of
 /// Web Workers, so several images compress in parallel.
 @MainActor
 final class SquooshEngine: NSObject {
@@ -29,10 +29,10 @@ final class SquooshEngine: NSObject {
            FileManager.default.fileExists(atPath: bundled.appendingPathComponent("index.html").path) {
             return bundled
         }
-        // Running from `swift run` during development.
+        // Running from `swift run` during development: Mac/Sources/Chipng → repo root.
         let source = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Resources/Squoosh")
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Shared/Squoosh")
         return FileManager.default.fileExists(atPath: source.path) ? source : nil
     }
 

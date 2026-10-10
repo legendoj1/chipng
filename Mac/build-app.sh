@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Builds Chipng.app.
-#   ./build-app.sh            → build/Chipng.app (for testing)
-#   ./build-app.sh --install  → /Applications/Chipng.app only
+#   ./Mac/build-app.sh            → Mac/build/Chipng.app (for testing)
+#   ./Mac/build-app.sh --install  → /Applications/Chipng.app only
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -20,7 +20,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$WORK/release/Chipng" "$APP/Contents/MacOS/Chipng"
 cp "$ROOT/Resources/AppIcon.icns" "$APP/Contents/Resources/"
-ditto "$ROOT/Resources/Squoosh" "$APP/Contents/Resources/Squoosh"
+ditto "$ROOT/../Shared/Squoosh" "$APP/Contents/Resources/Squoosh"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

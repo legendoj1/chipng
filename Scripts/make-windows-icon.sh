@@ -1,11 +1,11 @@
 #!/bin/zsh
 # Builds Windows/Chipng/Assets/Chipng.ico (+ a 64px PNG for the title bar)
-# from Resources/AppIcon.icns. Run Scripts/make-icon.swift first if the art changed.
+# from Mac/Resources/AppIcon.icns. Run Scripts/make-icon.swift first if the art changed.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 TMP=$(mktemp -d)
 for s in 16 20 24 32 40 48 64 128 256; do
-  sips -s format png -z $s $s Resources/AppIcon.icns --out "$TMP/$s.png" >/dev/null
+  sips -s format png -z $s $s Mac/Resources/AppIcon.icns --out "$TMP/$s.png" >/dev/null
 done
 cp "$TMP/64.png" Windows/Chipng/Assets/Chipng-64.png
 python3 -I - "$TMP" Windows/Chipng/Assets/Chipng.ico <<'PY'
